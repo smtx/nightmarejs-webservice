@@ -1,0 +1,19 @@
+{
+  "name": "nightmarejs-webservice",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.15.0",
+    "express": "^4.13.4",
+    "method-override": "^2.3.5",
+    "nightmare": "^2.2.0",
+    "stack-utils": "^0.4.0",
+    "vo": "^3.0.0"
+  }
+}
