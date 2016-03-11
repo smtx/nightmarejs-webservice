@@ -56,7 +56,7 @@ function *login() {
             return val;
         },login_recipe['isLoggedIn']);
     }
-    return {logged_in: logged_in, details: details};
+    return {logged_in: logged_in, message: details};
   } catch (e){
     throw new Error(e.message+' ('+selector+')');
   }
@@ -120,26 +120,34 @@ router.post('/', function(req,res) {
 
             vo(login)(function(err, result) {
                 if (err){
-                    res.send({status: 'error', details: err});
+                    res.send({status: 'error', message: err});
                 } else {
                     logged_in = result.logged_in;
                     recipe = req.body.recipe
                     if (logged_in && recipe){
-                        if (recipe.goto && recipe.evaluate){
+                        if (recipe.goto && recipe.evaluate && recipe.response){
                             try {
                                 vo(run)(function(err, result) {
-                                    if (err) res.send(err);
-                                    res.send(result);
+                                    if (err) res.status(400).send(err);
+                                    if (result){
+                                        jsResult = {}
+                                        jsResult[recipe.response.success.key] = recipe.response.success.message                      
+                                        res.send(jsResult);
+                                    } else {
+                                        jsResult = {}
+                                        jsResult[recipe.response.fail.key] = recipe.response.fail.message                     
+                                        res.status(400).send(jsResult);
+                                    }
                                 });             
                             } 
                             catch(err) {
-                                res.send(err);
+                                res.status(400).send(err);
                             }
                         } else {
-                            res.send(result);       
+                            res.status(400).send(result);       
                         }
                     } else {
-                        res.send(result);
+                        res.status(400).send(result);
                     }   
                 }
                 nightmare.end();
@@ -148,7 +156,7 @@ router.post('/', function(req,res) {
        catch(err){
            err.details = selector;
            err.status = 'Error';
-           res.send(err);
+           res.status(400).send(err);
        }
    }
 });
