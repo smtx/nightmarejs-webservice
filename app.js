@@ -90,6 +90,8 @@ function *run() {
         return result;
     } catch (e){
         throw new Error(e.message+' ('+selector+')');
+    } finally {
+        yield nightmare.end();
     }
 
 }
@@ -128,34 +130,38 @@ router.post('/', function(req,res) {
                         if (recipe.goto && recipe.evaluate && recipe.response){
                             try {
                                 vo(run)(function(err, result) {
-                                    if (err) res.status(400).send(err);
-                                    if (result){
-                                        jsResult = {}
-                                        jsResult[recipe.response.success.key] = recipe.response.success.message                      
-                                        res.send(jsResult);
-                                    } else {
-                                        jsResult = {}
-                                        jsResult[recipe.response.fail.key] = recipe.response.fail.message                     
-                                        res.status(400).send(jsResult);
-                                    }
+                                    try{
+                                        if (err) res.status(400).send(err);
+                                        if (result){
+                                            jsResult = {}
+                                            jsResult[recipe.response.success.key] = recipe.response.success.message                      
+                                            res.send(jsResult);
+                                        } else {
+                                            jsResult = {}
+                                            jsResult[recipe.response.fail.key] = recipe.response.fail.message                     
+                                            throw new Error(jsResult+' ('+selector+')');
+                                        }                                        
+                                    } catch(err) {
+                                        throw new Error(err.message);
+                                    } 
                                 });             
                             } 
                             catch(err) {
-                                res.status(400).send(err);
+                                throw new Error(err.message+' ('+selector+')');
                             }
                         } else {
-                            res.status(400).send(result);       
+                            throw new Error(result);      
                         }
                     } else {
-                        res.status(400).send(result);
+                        throw new Error(result);
                     }   
                 }
-                nightmare.end();
             });
        }
        catch(err){
            err.details = selector;
            err.status = 'Error';
+           nightmare.end();
            res.status(400).send(err);
        }
    }
