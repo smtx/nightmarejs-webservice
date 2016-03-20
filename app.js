@@ -62,6 +62,20 @@ function *login() {
   }
 }
 
+function *source() {
+    try {
+        nightmare.goto(recipe);
+        var r = yield nightmare.evaluate(function() {
+            return document.getElementsByTagName('html')[0].innerHTML;
+        });
+        return r;
+    } catch(e){
+        throw new Error(e.message+' ('+selector+')');
+    } finally {
+        yield nightmare.end();
+    }
+}
+
 function *run() {
     try {
         selector = 'goto page'
@@ -104,6 +118,18 @@ app.use(function(req, res, next) {
 
 router.get('/', function(req, res) {
        res.send("Hello "+req.query.nombre+"!");   
+});
+
+router.post('/source', function(req,res){
+   if (req.body.url) {
+    nightmare = Nightmare({
+        show:true        
+    });
+    recipe = req.body.url;
+    vo(source)(function(err,result){
+        res.send(result);
+    });
+   } 
 });
 
 router.post('/', function(req,res) {
