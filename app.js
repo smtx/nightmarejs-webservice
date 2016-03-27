@@ -123,7 +123,11 @@ router.get('/', function(req, res) {
 router.post('/source', function(req,res){
    if (req.body.url) {
     nightmare = Nightmare({
-        show:true        
+        show:true,
+        'ignore-certificate-errors': true,
+        'webPreferences': {
+            partition: 'persist:source'
+        }        
     });
     recipe = req.body.url;
     vo(source)(function(err,result){
