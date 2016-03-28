@@ -71,8 +71,6 @@ function *source() {
         return r;
     } catch(e){
         throw new Error(e.message+' ('+selector+')');
-    } finally {
-        yield nightmare.end();
     }
 }
 
@@ -122,17 +120,23 @@ router.get('/', function(req, res) {
 
 router.post('/source', function(req,res){
    if (req.body.url) {
-    nightmare = Nightmare({
-        show:true,
-        'ignore-certificate-errors': true,
-        'webPreferences': {
-            partition: 'persist:source'
-        }        
-    });
-    recipe = req.body.url;
-    vo(source)(function(err,result){
-        res.send(result);
-    });
+    try {
+        nightmare = Nightmare({
+            show:true,
+            'ignore-certificate-errors': true,
+            'webPreferences': {
+                partition: 'persist:source'
+            }        
+        });
+        recipe = req.body.url;
+        vo(source)(function(err,result){
+            res.send(result);
+        });
+    } catch (e){
+        throw new Error(e);
+    } finally {
+        nightmare.end();
+    }
    } 
 });
 
