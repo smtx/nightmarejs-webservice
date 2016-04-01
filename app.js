@@ -141,6 +141,7 @@ router.post('/source', function(req,res){
 });
 
 router.post('/', function(req,res) {
+   console.log(req.body);
    var logged_in = false;
    if (login_recipe = req.body.login) {
        try {
