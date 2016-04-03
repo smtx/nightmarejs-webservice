@@ -16,11 +16,16 @@ var vo = require('vo');
 var recipe;
 var login_recipe;
 var selector; 
+var cookies;
 var nightmare;
 
 function *login() {
   try {
-    nightmare.goto(login_recipe['goto']);
+    if (cookies) {
+        nightmare.goto(login_recipe['goto']).cookies.set(cookies);        
+    } else {
+        nightmare.goto(login_recipe['goto']);
+    }
     var logged_in = yield nightmare.evaluate( function (evaluate){
       var val = false;
       if (document.querySelector(evaluate['obj'])){
@@ -149,15 +154,14 @@ router.post('/', function(req,res) {
    if (login_recipe = req.body.login) {
        try {
             selector = 'Creating Nightmare instance';
-            nightmare = Nightmare({
+            cookies = req.body.cookies;
+            var nm_opts = {
                 show:true,
                 waitTimeout: 23000,
-                'ignore-certificate-errors': true,
-                'webPreferences': {
-                    partition: 'persist:'+login_recipe['isLoggedIn']['value']
-                }        
-            });
-
+                'ignore-certificate-errors': true
+            };
+            if (!cookies) nm_opts['webPreferences'] = {partition: 'nopersist'}
+            nightmare = Nightmare(nm_opts);
             vo(login)(function(err, result) {
                 if (err){
                     res.send({status: 'error', message: err});
@@ -167,6 +171,10 @@ router.post('/', function(req,res) {
                     if (logged_in && recipe){
                         if (recipe.goto && recipe.evaluate && recipe.response){
                             try {
+                                console.log('cookies:');
+                                nightmare.cookies.get({ url: null },function(e,c){
+                                    console.log(JSON.stringify(c));                                
+                                });
                                 vo(run)(function(err, result) {
                                     try{
                                         if (err) res.status(400).send(err);
