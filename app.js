@@ -22,7 +22,7 @@ var nightmare;
 function *login() {
   try {
     if (cookies) {
-        nightmare.goto(login_recipe['goto']).cookies.set(cookies);        
+        nightmare.goto(login_recipe['goto']).cookies.set(cookies);
     } else {
         nightmare.goto(login_recipe['goto']);
     }
@@ -31,6 +31,8 @@ function *login() {
       if (document.querySelector(evaluate['obj'])){
         if (document.querySelector(evaluate['obj'])[evaluate['attr']]==evaluate['value']){
             val = true;
+        } else {
+            console.log('Error in check login val:'+document.querySelector(evaluate['obj'])[evaluate['attr']]+' /// expected:'+evaluate['value']);
         }
       }
       return val;
@@ -82,6 +84,7 @@ function *source() {
 function *run() {
     try {
         selector = 'goto page'
+        console.log(selector + ' ' + recipe['goto']);
         nightmare.goto(recipe['goto']);
         recipe['steps'].forEach(function(step){
             selector = 'steps: ' + JSON.stringify(step);
@@ -160,7 +163,9 @@ router.post('/', function(req,res) {
                 waitTimeout: 23000,
                 'ignore-certificate-errors': true
             };
-            if (!cookies) nm_opts['webPreferences'] = {partition: 'nopersist'}
+            //if (!cookies){
+            //    nm_opts['webPreferences'] = {partition: 'nopersist'}  
+            //} 
             nightmare = Nightmare(nm_opts);
             vo(login)(function(err, result) {
                 if (err){
