@@ -163,9 +163,10 @@ router.post('/', function(req,res) {
                 waitTimeout: 23000,
                 'ignore-certificate-errors': true
             };
-            //if (!cookies){
-            //    nm_opts['webPreferences'] = {partition: 'nopersist'}  
-            //} 
+            if (!cookies){
+                //nm_opts['webPreferences'] = {partition: 'persist:'+login_recipe['isLoggedIn']['value']};  
+                nm_opts['paths'] = { userData: '/app/userData/'+login_recipe['isLoggedIn']['value']};
+            }
             nightmare = Nightmare(nm_opts);
             vo(login)(function(err, result) {
                 if (err){
