@@ -160,27 +160,29 @@ router.post('/', function(req,res) {
             cookies = req.body.cookies;
             var nm_opts = {
                 show:true,
-                waitTimeout: 23000,
-                'ignore-certificate-errors': true
+                waitTimeout: 3000,
+                'ignore-certificate-errors': true,
+                openDevTools: true
             };
-            if (!cookies){
+            // if (!cookies){
                 //nm_opts['webPreferences'] = {partition: 'persist:'+login_recipe['isLoggedIn']['value']};  
-                nm_opts['paths'] = { userData: '/app/userData/'+login_recipe['isLoggedIn']['value']};
-            }
+                nm_opts['paths'] = { userData: '/Users/matrix/Proyectos/pulpou/pulpou-reports/pulpou-nightmare/userData/'+login_recipe['isLoggedIn']['value']};
+            // }
             nightmare = Nightmare(nm_opts);
-            vo(login)(function(err, result) {
-                if (err){
-                    res.send({status: 'error', message: err});
-                } else {
-                    logged_in = result.logged_in;
-                    recipe = req.body.recipe
+            // vo(login)(function(err, result) {
+                // if (err){
+                    // res.send({status: 'error', message: err});
+                // } else {
+                    // logged_in = result.logged_in;
+                    logged_in = true;
+                    recipe = req.body.recipe;
                     if (logged_in && recipe){
                         if (recipe.goto && recipe.evaluate && recipe.response){
                             try {
-                                console.log('cookies:');
-                                nightmare.cookies.get({ url: null },function(e,c){
-                                    console.log(JSON.stringify(c));                                
-                                });
+                                // console.log('cookies:');
+                                // nightmare.cookies.get({ url: null },function(e,c){
+                                //     console.log(JSON.stringify(c));                                
+                                // });
                                 vo(run)(function(err, result) {
                                     try{
                                         if (err) res.status(400).send(err);
@@ -207,8 +209,8 @@ router.post('/', function(req,res) {
                     } else {
                         throw new Error(result);
                     }   
-                }
-            });
+            //     }
+            // });
        }
        catch(err){
            err.details = selector;

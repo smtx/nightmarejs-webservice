@@ -27,7 +27,7 @@ RUN apt-get install -y \
   gcc-multilib \
   g++-multilib
 
-ENV DEBUG="nightmare"
+# ENV DEBUG="nightmare"
 
 # Add current directory to /app
 ADD . /app
