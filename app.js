@@ -161,12 +161,11 @@ router.post('/', function(req,res) {
             var nm_opts = {
                 show:true,
                 waitTimeout: 3000,
-                'ignore-certificate-errors': true,
-                openDevTools: true
+                'ignore-certificate-errors': true
             };
             // if (!cookies){
-                //nm_opts['webPreferences'] = {partition: 'persist:'+login_recipe['isLoggedIn']['value']};  
-                nm_opts['paths'] = { userData: '/Users/matrix/Proyectos/pulpou/pulpou-reports/pulpou-nightmare/userData/'+login_recipe['isLoggedIn']['value']};
+                // nm_opts['paths'] = { userData: '/Users/matrix/Proyectos/pulpou/pulpou-reports/pulpou-nightmare/userData/'+login_recipe['isLoggedIn']['value']};
+                nm_opts['paths'] = { userData: '/app/userData/'+login_recipe['isLoggedIn']['value']};
             // }
             nightmare = Nightmare(nm_opts);
             // vo(login)(function(err, result) {
