@@ -1,23 +1,27 @@
 var express = require("express"),
     app = express(),
     bodyParser  = require("body-parser"),
-    methodOverride = require("method-override");
+    methodOverride = require("method-override"),
+    vo = require('vo');
+
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(methodOverride());
 
+
+
 var Nightmare = require('nightmare');
     
 var router = express.Router();
 
-var vo = require('vo');
-
 var recipe;
+var pageNum;
 var login_recipe;
 var selector; 
 var cookies;
 var nightmare;
+var nightmare2;
 
 function *login() {
   try {
@@ -47,7 +51,7 @@ function *login() {
             } else {
                 nightmare[step['action']](step['value']);      
             }
-        })
+        });
         logged_in = yield nightmare.evaluate(function (evaluate) {
             var val = false;
             selector = 'check login';
@@ -68,10 +72,79 @@ function *login() {
     throw new Error(e.message+' ('+selector+')');
   }
 }
+function *obtainMaxPage()
+{
+    try{
+        var totalItems;
+        var itemsPerView;
+        var string;
+        nightmare2
+            .goto(recipe)
+            .wait();
+        switch(true){
+            case (recipe.indexOf("rakuten.com")>-1):
+                totalItems = yield nightmare2.evaluate(function() {
+                    return document.querySelector('#ratTotalresult').value;
+                });
+                itemsPerView = 24;
+                break;
+            case recipe.indexOf("rakuten.co.uk") > -1:
+                string = yield nightmare2.evaluate(function() {
+                    return document.querySelector("div.b-tabs-utility").innerText;
+                });
+                string = JSON.stringify(string);
+                var regExp = /(?:of )[0-9]+/;
+                var onlyNum = /[0-9]+/;
+                totalItems = string.match(regExp);
+                totalItems += "";
+                totalItems = totalItems.match(onlyNum);
+                console.log("Total items rak UK: " + totalItems);
+                itemsPerView = 60;
+                break;
+            case recipe.indexOf("rakuten.co.jp") > -1:
+                totalItems = yield nightmare2.evaluate(function() {
+                    return document.querySelector('#ratTotalresult').value;
+                });
+                itemsPerView = 45;
+                break;
+            /* case recipe.indexOf("11st.co.kr") > -1:
+                string = yield nightmare2.evaluate(function() {
+                    return document.querySelector('div.list_info strong').innerText;
+                });
+                string += "";
+                var regExp = /(\d+)/g;
+                totalItems = string.match(regExp);
+                totalItems += "";
+                totalItems = totalItems.replace(',','');
+                console.log("Url: " + recipe);
+                recipe = recipe.replace("pageSize=20", "pageSize=100");
+                itemsPerView = 60;
+                break; */
+            default:
+                console.log("Entro a default");
+                throw new Error('no matching error');
 
+        }
+        console.log("Total items: " + totalItems + "\nItems per view " + itemsPerView);
+        var maxPage = Math.ceil(totalItems/itemsPerView);
+        return maxPage;
+    } catch(e){
+        throw new Error(e.message+' ('+selector+')');
+    }
+
+
+
+}
 function *source() {
     try {
-        nightmare.goto(recipe);
+        nightmare.goto(recipe)
+            .wait("html");
+        if(recipe.indexOf("gmarket.co.kr") > -1 && pageNum){
+            nightmare.click("div.paginate span:nth-child(3) a:nth-child("+pageNum+")")
+                .wait("html");
+            console.log("Click");
+        }
+
         var r = yield nightmare.evaluate(function() {
             return document.getElementsByTagName('html')[0].innerHTML;
         });
@@ -83,7 +156,7 @@ function *source() {
 
 function *run() {
     try {
-        selector = 'goto page'
+        selector = 'goto page';
         console.log(selector + ' ' + recipe['goto']);
         nightmare.goto(recipe['goto']);
         recipe['steps'].forEach(function(step){
@@ -93,7 +166,7 @@ function *run() {
             } else {
                 nightmare[step['action']](step['value']);              
             }
-        })
+        });
 
         var result = yield nightmare.evaluate(function (evaluate) {
             var val = false;
@@ -111,7 +184,7 @@ function *run() {
     } catch (e){
         throw new Error(e.message+' ('+selector+')');
     } finally {
-        yield nightmare.end();
+       yield nightmare.end();
     }
 
 }
@@ -136,14 +209,29 @@ router.post('/source', function(req,res){
                 partition: 'persist:source'
             }        
         });
+        /* nightmare2 = Nightmare({show:false});
+
+        vo(obtainMaxPage)(function (err,lastPage) {
+            if(err)
+                console.log("Error: " + err);
+            recipe += (pagePath + pageNum);
+            console.log("Last page: " + lastPage);
+            vo(source)(function(err,result){
+                if(err) throw new Error(err);
+                res.send(result);
+                })
+            })*/
+        pageNum = req.body.pageNum;
         recipe = req.body.url;
         vo(source)(function(err,result){
+            if(err) throw new Error(err);
             res.send(result);
         });
     } catch (e){
         throw new Error(e);
     } finally {
         nightmare.end();
+        //nightmare2.end();
     }
    } 
 });
@@ -187,11 +275,11 @@ router.post('/', function(req,res) {
                                         if (err) res.status(400).send(err);
                                         if (result){
                                             jsResult = {}
-                                            jsResult[recipe.response.success.key] = recipe.response.success.message                      
+                                            jsResult[recipe.response.success.key] = recipe.response.success.message
                                             res.send(jsResult);
                                         } else {
                                             jsResult = {}
-                                            jsResult[recipe.response.fail.key] = recipe.response.fail.message                     
+                                            jsResult[recipe.response.fail.key] = recipe.response.fail.message
                                             throw new Error(jsResult+' ('+selector+')');
                                         }                                        
                                     } catch(err) {
