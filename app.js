@@ -21,7 +21,6 @@ var login_recipe;
 var selector; 
 var cookies;
 var nightmare;
-var nightmare2;
 
 function *login() {
   try {
@@ -72,66 +71,7 @@ function *login() {
     throw new Error(e.message+' ('+selector+')');
   }
 }
-function *obtainMaxPage()
-{
-    try{
-        var totalItems;
-        var itemsPerView;
-        var string;
-        nightmare2
-            .goto(recipe)
-            .wait();
-        switch(true){
-            case (recipe.indexOf("rakuten.com")>-1):
-                totalItems = yield nightmare2.evaluate(function() {
-                    return document.querySelector('#ratTotalresult').value;
-                });
-                itemsPerView = 24;
-                break;
-            case recipe.indexOf("rakuten.co.uk") > -1:
-                string = yield nightmare2.evaluate(function() {
-                    return document.querySelector("div.b-tabs-utility").innerText;
-                });
-                string = JSON.stringify(string);
-                var regExp = /(?:of )[0-9]+/;
-                var onlyNum = /[0-9]+/;
-                totalItems = string.match(regExp);
-                totalItems += "";
-                totalItems = totalItems.match(onlyNum);
-                console.log("Total items rak UK: " + totalItems);
-                itemsPerView = 60;
-                break;
-            case recipe.indexOf("rakuten.co.jp") > -1:
-                totalItems = yield nightmare2.evaluate(function() {
-                    return document.querySelector('#ratTotalresult').value;
-                });
-                itemsPerView = 45;
-                break;
-            /* case recipe.indexOf("11st.co.kr") > -1:
-                string = yield nightmare2.evaluate(function() {
-                    return document.querySelector('div.list_info strong').innerText;
-                });
-                string += "";
-                var regExp = /(\d+)/g;
-                totalItems = string.match(regExp);
-                totalItems += "";
-                totalItems = totalItems.replace(',','');
-                console.log("Url: " + recipe);
-                recipe = recipe.replace("pageSize=20", "pageSize=100");
-                itemsPerView = 60;
-                break; */
-            default:
-                console.log("Entro a default");
-                throw new Error('no matching error');
 
-        }
-        console.log("Total items: " + totalItems + "\nItems per view " + itemsPerView);
-        var maxPage = Math.ceil(totalItems/itemsPerView);
-        return maxPage;
-    } catch(e){
-        throw new Error(e.message+' ('+selector+')');
-    }
-}
 function *source() {
     try {
         nightmare.goto(recipe)
