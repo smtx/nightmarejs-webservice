@@ -131,23 +131,20 @@ function *obtainMaxPage()
     } catch(e){
         throw new Error(e.message+' ('+selector+')');
     }
-
-
-
 }
 function *source() {
     try {
         nightmare.goto(recipe)
-            .wait("html");
+            .wait();
         if(recipe.indexOf("gmarket.co.kr") > -1 && pageNum){
             nightmare.click("div.paginate span:nth-child(3) a:nth-child("+pageNum+")")
                 .wait("html");
-            console.log("Click");
         }
 
         var r = yield nightmare.evaluate(function() {
             return document.getElementsByTagName('html')[0].innerHTML;
         });
+        console.log(r);
         return r;
     } catch(e){
         throw new Error(e.message+' ('+selector+')');
@@ -203,7 +200,7 @@ router.post('/source', function(req,res){
    if (req.body.url) {
     try {
         nightmare = Nightmare({
-            show:true,
+            show:false,
             'ignore-certificate-errors': true,
             'webPreferences': {
                 partition: 'persist:source'
