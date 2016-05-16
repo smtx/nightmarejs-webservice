@@ -1,19 +1,23 @@
 var express = require("express"),
     app = express(),
     bodyParser  = require("body-parser"),
-    methodOverride = require("method-override");
+    methodOverride = require("method-override"),
+    vo = require('vo');
+
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(methodOverride());
 
+
+
 var Nightmare = require('nightmare');
     
 var router = express.Router();
 
-var vo = require('vo');
-
+var click;
 var recipe;
+var pageNum;
 var login_recipe;
 var selector; 
 var cookies;
@@ -47,7 +51,7 @@ function *login() {
             } else {
                 nightmare[step['action']](step['value']);      
             }
-        })
+        });
         logged_in = yield nightmare.evaluate(function (evaluate) {
             var val = false;
             selector = 'check login';
@@ -71,10 +75,16 @@ function *login() {
 
 function *source() {
     try {
-        nightmare.goto(recipe);
+        nightmare.goto(recipe)
+            .wait();
+        if(click){
+            nightmare.click(click)
+                .wait("html");
+        }
         var r = yield nightmare.evaluate(function() {
             return document.getElementsByTagName('html')[0].innerHTML;
         });
+        // console.log(r);
         return r;
     } catch(e){
         throw new Error(e.message+' ('+selector+')');
@@ -83,7 +93,7 @@ function *source() {
 
 function *run() {
     try {
-        selector = 'goto page'
+        selector = 'goto page';
         console.log(selector + ' ' + recipe['goto']);
         nightmare.goto(recipe['goto']);
         recipe['steps'].forEach(function(step){
@@ -93,7 +103,7 @@ function *run() {
             } else {
                 nightmare[step['action']](step['value']);              
             }
-        })
+        });
 
         var result = yield nightmare.evaluate(function (evaluate) {
             var val = false;
@@ -111,7 +121,7 @@ function *run() {
     } catch (e){
         throw new Error(e.message+' ('+selector+')');
     } finally {
-        yield nightmare.end();
+       yield nightmare.end();
     }
 
 }
@@ -130,14 +140,17 @@ router.post('/source', function(req,res){
    if (req.body.url) {
     try {
         nightmare = Nightmare({
-            show:true,
+            show:false,
             'ignore-certificate-errors': true,
             'webPreferences': {
                 partition: 'persist:source'
             }        
         });
+        pageNum = req.body.pageNum;
         recipe = req.body.url;
+        click = req.body.click;
         vo(source)(function(err,result){
+            if(err) throw new Error(err);
             res.send(result);
         });
     } catch (e){
@@ -187,11 +200,11 @@ router.post('/', function(req,res) {
                                         if (err) res.status(400).send(err);
                                         if (result){
                                             jsResult = {}
-                                            jsResult[recipe.response.success.key] = recipe.response.success.message                      
+                                            jsResult[recipe.response.success.key] = recipe.response.success.message
                                             res.send(jsResult);
                                         } else {
                                             jsResult = {}
-                                            jsResult[recipe.response.fail.key] = recipe.response.fail.message                     
+                                            jsResult[recipe.response.fail.key] = recipe.response.fail.message
                                             throw new Error(jsResult+' ('+selector+')');
                                         }                                        
                                     } catch(err) {
