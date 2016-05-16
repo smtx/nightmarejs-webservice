@@ -77,7 +77,7 @@ function *source() {
     try {
         nightmare.goto(recipe)
             .wait();
-        if(pageNum && click){
+        if(click){
             nightmare.click(click)
                 .wait("html");
         }
