@@ -15,6 +15,7 @@ var Nightmare = require('nightmare');
     
 var router = express.Router();
 
+var gm;
 var recipe;
 var pageNum;
 var login_recipe;
@@ -76,7 +77,7 @@ function *source() {
     try {
         nightmare.goto(recipe)
             .wait();
-        if(recipe.indexOf("gmarket.co.kr") > -1 && pageNum){
+        if(recipe.indexOf(gm) > -1 && pageNum){
             nightmare.click("div.paginate span:nth-child(3) a:nth-child("+pageNum+")")
                 .wait("html");
         }
@@ -146,20 +147,9 @@ router.post('/source', function(req,res){
                 partition: 'persist:source'
             }        
         });
-        /* nightmare2 = Nightmare({show:false});
-
-        vo(obtainMaxPage)(function (err,lastPage) {
-            if(err)
-                console.log("Error: " + err);
-            recipe += (pagePath + pageNum);
-            console.log("Last page: " + lastPage);
-            vo(source)(function(err,result){
-                if(err) throw new Error(err);
-                res.send(result);
-                })
-            })*/
         pageNum = req.body.pageNum;
         recipe = req.body.url;
+        gm = req.body.gm;
         vo(source)(function(err,result){
             if(err) throw new Error(err);
             res.send(result);
@@ -168,7 +158,6 @@ router.post('/source', function(req,res){
         throw new Error(e);
     } finally {
         nightmare.end();
-        //nightmare2.end();
     }
    } 
 });
