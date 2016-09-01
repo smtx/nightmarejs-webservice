@@ -8,14 +8,14 @@ app.use(bodyParser.json());
 app.use(methodOverride());
 
 var Nightmare = require('nightmare');
-    
+
 var router = express.Router();
 
 var vo = require('vo');
 
 var recipe;
 var login_recipe;
-var selector; 
+var selector;
 var cookies;
 var nightmare;
 
@@ -43,9 +43,9 @@ function *login() {
         login_recipe['login_steps'].forEach(function(step){
             selector = 'login steps: ' + JSON.stringify(step);
             if( typeof step['value'] === "object" ){
-                nightmare[step['action']](step['value'][0],step['value'][1]); 
+                nightmare[step['action']](step['value'][0],step['value'][1]);
             } else {
-                nightmare[step['action']](step['value']);      
+                nightmare[step['action']](step['value']);
             }
         })
         logged_in = yield nightmare.evaluate(function (evaluate) {
@@ -55,7 +55,7 @@ function *login() {
                 if (document.querySelector(evaluate['obj'])[evaluate['attr']]==evaluate['value']){
                     val = true;
                 } else {
-                    details = 'Value of attribute '+evaluate['attr']+' in selector '+evaluate['obj']+' mismatched. '+document.querySelector(evaluate['obj'])[evaluate['attr']]+'!='+evaluate['value'];                
+                    details = 'Value of attribute '+evaluate['attr']+' in selector '+evaluate['obj']+' mismatched. '+document.querySelector(evaluate['obj'])[evaluate['attr']]+'!='+evaluate['value'];
                 }
             } else {
                 details = 'Selector '+evaluate['obj']+' not found. ';
@@ -89,9 +89,9 @@ function *run() {
         recipe['steps'].forEach(function(step){
             selector = 'steps: ' + JSON.stringify(step);
             if( typeof step['value'] === "object" ){
-                nightmare[step['action']](step['value'][0],step['value'][1]); 
+                nightmare[step['action']](step['value'][0],step['value'][1]);
             } else {
-                nightmare[step['action']](step['value']);              
+                nightmare[step['action']](step['value']);
             }
         })
 
@@ -106,7 +106,7 @@ function *run() {
             }
             return val;
         },recipe['evaluate']);
-        
+
         return result;
     } catch (e){
         throw new Error(e.message+' ('+selector+')');
@@ -123,7 +123,7 @@ app.use(function(req, res, next) {
 });
 
 router.get('/', function(req, res) {
-       res.send("Hello "+req.query.nombre+"!");   
+       res.send("Hello "+req.query.nombre+"!");
 });
 
 router.post('/source', function(req,res){
@@ -134,7 +134,7 @@ router.post('/source', function(req,res){
             'ignore-certificate-errors': true,
             'webPreferences': {
                 partition: 'persist:source'
-            }        
+            }
         });
         recipe = req.body.url;
         vo(source)(function(err,result){
@@ -145,13 +145,13 @@ router.post('/source', function(req,res){
     } finally {
         nightmare.end();
     }
-   } 
+   }
 });
 
 router.post('/', function(req,res) {
     var util = require('util');
 
-    console.log(util.inspect(req.body, {showHidden: false, depth: null}));
+  console.log(util.inspect(req.body, {showHidden: false, depth: null}));
 
     var logged_in = false;
    if (login_recipe = req.body.login) {
@@ -176,38 +176,40 @@ router.post('/', function(req,res) {
                     logged_in = true;
                     recipe = req.body.recipe;
                     if (logged_in && recipe){
-                        if (recipe.goto && recipe.evaluate && recipe.response){
+                        if (recipe.goto && recipe.response && recipe.evaluate){
                             try {
                                 // console.log('cookies:');
                                 // nightmare.cookies.get({ url: null },function(e,c){
-                                //     console.log(JSON.stringify(c));                                
+                                //     console.log(JSON.stringify(c));
                                 // });
                                 vo(run)(function(err, result) {
                                     try{
                                         if (err) res.status(400).send(err);
-                                        if (result){
-                                            jsResult = {}
-                                            jsResult[recipe.response.success.key] = recipe.response.success.message                      
-                                            res.send(jsResult);
-                                        } else {
-                                            jsResult = {}
-                                            jsResult[recipe.response.fail.key] = recipe.response.fail.message                     
-                                            throw new Error(jsResult+' ('+selector+')');
-                                        }                                        
                                     } catch(err) {
-                                        throw new Error(err.message);
-                                    } 
-                                });             
-                            } 
+                                      console.log('Detalle del error:',util.inspect(err, false, null));
+                                    }
+                                }, function(err,result) {
+                                  if (result){
+                                      jsResult = {}
+                                      jsResult[recipe.response.success.key] = recipe.response.success.message
+                                      res.send(jsResult);
+                                  } else {
+                                      jsResult = {}
+                                      jsResult[recipe.response.fail.key] = recipe.response.fail.message
+                                      res.send(jsResult);
+                                  }
+
+                                });
+                            }
                             catch(err) {
                                 throw new Error(err.message+' ('+selector+')');
                             }
                         } else {
-                            throw new Error(result);      
+                            throw new Error(result);
                         }
                     } else {
                         throw new Error(result);
-                    }   
+                    }
             //     }
             // });
        }
