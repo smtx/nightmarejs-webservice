@@ -151,7 +151,7 @@ router.post('/source', function(req,res){
 router.post('/', function(req,res) {
     var util = require('util');
 
-  console.log(util.inspect(req.body, {showHidden: false, depth: null}));
+  // console.log(util.inspect(req.body, {showHidden: false, depth: null}));
 
     var logged_in = false;
    if (login_recipe = req.body.login) {
@@ -192,10 +192,12 @@ router.post('/', function(req,res) {
                                   if (result){
                                       jsResult = {}
                                       jsResult[recipe.response.success.key] = recipe.response.success.message
+                                      console.log(recipe.response.success.message);
                                       res.send(jsResult);
                                   } else {
                                       jsResult = {}
                                       jsResult[recipe.response.fail.key] = recipe.response.fail.message
+                                      console.log(recipe.response.fail.message);
                                       res.send(jsResult);
                                   }
 
