@@ -151,7 +151,7 @@ router.post('/source', function(req,res){
 router.post('/', function(req,res) {
     var util = require('util');
 
-  // console.log(util.inspect(req.body, {showHidden: false, depth: null}));
+  console.log(util.inspect(req.body, {showHidden: false, depth: null}));
 
     var logged_in = false;
    if (login_recipe = req.body.login) {
