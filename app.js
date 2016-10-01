@@ -181,7 +181,7 @@ router.post('/', function(req,res) {
                                       jsResult = {}
                                       jsResult[recipe.response.success.key] = recipe.response.success.message
                                       console.log(recipe.response.success.message);
-                                      res.status(200).send(jsResult);
+                                      res.send(jsResult);
                                   } else {
                                       jsResult = {}
                                       jsResult[recipe.response.fail.key] = recipe.response.fail.message
